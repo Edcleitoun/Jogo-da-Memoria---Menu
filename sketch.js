@@ -36,6 +36,27 @@ var imagemCreditos;
 var fonteJogo;
 var exemploJogo;
 
+// Cartas
+
+var imgCartaLargura = 100;
+var imgCartaAltura = 100;
+var posInicialX = 150;
+var posInicialY = 70;
+var imgCartas = []; 
+var imgFundoCarta; 
+var cartaVirada; 
+var imgCarta1;
+var matrizImgCartas = [];
+var matrizCartasViradas = [];
+var valoresCartas = [];
+
+var matrizTamanho = 4;
+var matrizMatch = [];
+var matrizValores = [];
+
+var contClicks = 0;
+var linColAnterior = [];
+
 var Personagem1;
 var Personagem2;
 var Personagem3;
@@ -66,7 +87,9 @@ function telaMenu () {
   if (mouseX > xMinBotao && mouseX < xMaxBotao && mouseY > yMinBotao1 && mouseY < yMaxBotao1) {
     if (mouseIsPressed) {
     console.log("Botão Jogar")
-    tela = 1
+   setTimeout(function(){ tela = 1 }, 500) 
+
+   
   }
     fill(143,188,143)
   } 
@@ -109,17 +132,17 @@ function telaMenu () {
 }
 
 function telaJogo () {
+  
   background(220);
   textSize(40)
-  text("Ache os Pares!", 270, 70)
-  image(exemploJogo,150,100,500, 350)
-  image(Personagem2,30, 340, 150, 150)
+  text("Ache os Pares!", 240, 50)
+  image(Personagem2,10, 340, 150, 150)
 
   //Botão Voltar
   fill(250)
-   if (mouseX > xMinVoltar && mouseX < xMaxVoltar && mouseY > yMinVoltar1 && mouseY < yMaxVoltar1) {
-      if (mouseIsPressed) {
-      tela = 0
+  if (mouseX > xMinVoltar && mouseX < xMaxVoltar && mouseY > yMinVoltar1 && mouseY < yMaxVoltar1) {
+    if (mouseIsPressed) {
+    tela = 0
 }
 fill(143,188,143)
 }
@@ -128,6 +151,45 @@ fill(143,188,143)
     textSize(25)
     fill(0)
     text("Voltar", 690, 468)
+
+   mostrarCartas();
+
+
+    
+}
+
+function mostrarCartas () {
+
+//posX = posInicialX
+let posY = posInicialY
+for (l=0; l<4; l++) { 
+  let posX = posInicialX
+  for (c=0; c<4; c++) {
+    if (matrizCartasViradas[l][c] || matrizMatch[l][c]) {
+    image(matrizImgCartas[l][c],posX,posY);
+   }
+   else {
+    image(imgFundoCarta, posX, posY, 100, 100)
+   }
+    posX = posX + imgCartaLargura
+  }
+  posY = posY + imgCartaAltura
+  
+}
+ //console.log(matrizCartasViradas)
+ 
+}
+
+function convertePosMousePosMatriz (mx,my) {
+  mx = mx - posInicialX;
+  my = my - posInicialY;
+  let posC = parseInt(mx/imgCartaLargura);
+  let posL = parseInt(my/imgCartaAltura);
+  //console.log(posL+" "+posC)
+  posLC = [];
+  posLC[0] = posL; 
+  posLC[1] = posC; 
+  return posLC;
 }
 
 function telaInstrucoes() {
@@ -217,12 +279,85 @@ function preload() {
   Personagem6 = loadImage("Personagens/6Lagoona.gif")
   Personagem7 = loadImage("Personagens/7Moster.gif")
   exemploJogo = loadImage("Fundos/exemplo.gif")
-
-}
+  imgFundoCarta = loadImage("Cartas/imgprincipal.png")
+  imgCarta1 = loadImage("Cartas/1.png")
+  for (i=1; i<=8; i++){
+    tempImg = loadImage("Cartas/"+i+".png");
+    imgCartas.push(tempImg);
+    valoresCartas.push(i); 
+    tempImg = loadImage("Cartas/"+i+".1.png");
+    imgCartas.push(tempImg);
+    valoresCartas.push(i); 
+  }
+  cont = 0
+    for (l=0; l< 4; l++) {
+      tempImgLinha = [];
+      tempCartaVirada = [];
+      tempVValor = [];
+      tempVMatch = [];
+      for (c=0; c<4; c++) {
+        tempImgLinha [c] = imgCartas[cont]
+        tempVValor[c] = valoresCartas[cont]
+        tempCartaVirada[c] = false
+        tempVMatch[c] = false
+        cont++
+      }
+      matrizCartasViradas[l] = tempCartaVirada;
+      matrizImgCartas[l] = tempImgLinha; 
+      matrizValores[l] = tempVValor;
+      matrizMatch[l] = tempVMatch
+    }
+  }
 
 function setup() {
-  createCanvas(800, 500);
+  createCanvas(800, 500); 
+  cartaVirada = true
+  xb = 150; 
+  yb1 = 200; 
+  yb2 = 300; 
+  yb3 = 400;
+  yVoltar = 340; 
+  xVoltar = 270; 
+  larguraB = 200; 
+  larguraVoltar = 100;
+  alturaVoltar = 40;
+  alturaB = 60; 
+  suavizaB = 12; 
 
+  console.log(matrizMatch)
+}
+function mouseClicked() {
+  if (tela == 0) {
+  } else {
+  if (tela == 1) {
+   
+    linCol = convertePosMousePosMatriz(mouseX,mouseY);
+    console.log(linCol)
+    matrizCartasViradas[linCol[0]][linCol[1]] = true;
+      contClicks = contClicks + 1
+      console.log("Cliques: " + contClicks)
+      if( contClicks == 2) {
+        if(matrizCartasViradas[linCol[0]][linCol[1]] == matrizValores[linColAnterior[0]][linColAnterior[1]]){
+          matrizMatch[linCol[0]][linCol[1]] = true;
+          matrizMatch[linColAnterior[0]][linColAnterior[1]] = true;
+        }
+      }
+  
+      if (contClicks > 2) {
+        // marca todas as cartas como desviradas
+        for(l = 0; l < matrizTamanho; l++) {
+          for(c = 0; c < matrizTamanho; c++) {
+          matrizCartasViradas[l][c] = false;
+        } 
+      }
+      matrizCartasViradas[linCol[0]][linCol[1]] = true;
+      contClicks = 1
+     }
+     if (contClicks == 1) {
+       linColAnterior = linCol;
+     }
+    }
+  }
 }
 
 function draw() {
@@ -231,7 +366,10 @@ function draw() {
     telaMenu()
   } 
   if ( tela == 1) {
+    
     telaJogo()
+    cartaVirada = !cartaVirada
+   
   }
 
   if( tela == 2) {
@@ -240,5 +378,6 @@ function draw() {
 
   if( tela == 3) {
     telaCreditos()
+    
   }
-}
+  }
