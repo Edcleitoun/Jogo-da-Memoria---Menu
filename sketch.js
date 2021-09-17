@@ -35,13 +35,14 @@ var imagemInstrucoes;
 var imagemCreditos;
 var fonteJogo;
 var exemploJogo;
+var imagemJogo;
 
 // Cartas
 
-var imgCartaLargura = 100;
-var imgCartaAltura = 100;
-var posInicialX = 150;
-var posInicialY = 70;
+var imgCartaLargura = 105;
+var imgCartaAltura = 105;
+var posInicialX = 200;
+var posInicialY = 55;
 var imgCartas = []; 
 var imgFundoCarta; 
 var cartaVirada; 
@@ -56,6 +57,11 @@ var matrizValores = [];
 
 var contClicks = 0;
 var linColAnterior = [];
+var contTempo = 0;
+const framesPorSegundo = 30
+var contSegundos = 0;
+var indicesOriginais = [];
+var indicesEmbaralhados = [];
 
 var Personagem1;
 var Personagem2;
@@ -134,9 +140,13 @@ function telaMenu () {
 function telaJogo () {
   
   background(220);
+  image(imagemJogo,0 , 0, 800, 500)
   textSize(40)
-  text("Ache os Pares!", 240, 50)
-  image(Personagem2,10, 340, 150, 150)
+  fill(220)
+  text("Ache os Pares!", 280, 35)
+  image(Personagem2,2, 340, 150, 150)
+  fill(220)
+  rect(150,40,500, 450, 15)
 
   //Botão Voltar
   fill(250)
@@ -153,7 +163,18 @@ fill(143,188,143)
     text("Voltar", 690, 468)
 
    mostrarCartas();
-
+    textSize(20);
+    fill(220)
+    text("Tempo: " + contSegundos, 700, 50)
+   if (contClicks == 1 || contClicks == 2) {
+    contTempo++
+   contSegundos = parseInt(contTempo / framesPorSegundo)
+    if( contSegundos >= 5 ) {
+      desvirarCartas();
+      contTempo = 0
+      contClicks = 0
+    }
+ }
 
     
 }
@@ -178,6 +199,28 @@ for (l=0; l<4; l++) {
 }
  //console.log(matrizCartasViradas)
  
+}
+
+function desvirarCartas () {
+  // marca todas as cartas como desviradas
+  for(l = 0; l < matrizTamanho; l++) {
+    for(c = 0; c < matrizTamanho; c++) {
+    matrizCartasViradas[l][c] = false;
+  } 
+}
+}
+
+function embaralhar(vetorA) {
+
+  vetorB = [] 
+  qtInicalElementos = vetorA.length; 
+  for (j=0; j<qtInicalElementos; j++) {
+    i = parseInt( Math.random()* vetorA.length )
+    vx = vetorA.splice(i,1) 
+    vetorB.push(vx[0]) 
+  } 
+  //console.log(vetorB); 
+  return vetorB; 
 }
 
 function convertePosMousePosMatriz (mx,my) {
@@ -270,6 +313,7 @@ function preload() {
   imagemMenu = loadImage("Fundos/menu.jpeg")
   imagemCreditos = loadImage("Fundos/Creditos.png")
   imagemInstrucoes = loadImage("Fundos/Instrucoes.jpeg")
+  imagemJogo = loadImage("Fundos/Jogo.jpg")
   fonteJogo = loadFont("Fontes/Acme.ttf")
   Personagem1 = loadImage("Personagens/1Cleo.gif")
   Personagem2 = loadImage("Personagens/2Startapp.gif")
@@ -289,6 +333,19 @@ function preload() {
     imgCartas.push(tempImg);
     valoresCartas.push(i); 
   }
+  
+  }
+
+function setup() {
+  createCanvas(800, 500); 
+
+  for( i=0; i<16; i++) {
+    indicesOriginais[i] = i;
+  }
+
+    indicesEmbaralhados = embaralhar(indicesOriginais)
+  console.log(indicesEmbaralhados)
+
   cont = 0
     for (l=0; l< 4; l++) {
       tempImgLinha = [];
@@ -296,8 +353,8 @@ function preload() {
       tempVValor = [];
       tempVMatch = [];
       for (c=0; c<4; c++) {
-        tempImgLinha [c] = imgCartas[cont]
-        tempVValor[c] = valoresCartas[cont]
+        tempImgLinha [c] = imgCartas[indicesEmbaralhados [cont]]
+        tempVValor[c] = valoresCartas[indicesEmbaralhados [cont]]
         tempCartaVirada[c] = false
         tempVMatch[c] = false
         cont++
@@ -307,10 +364,7 @@ function preload() {
       matrizValores[l] = tempVValor;
       matrizMatch[l] = tempVMatch
     }
-  }
 
-function setup() {
-  createCanvas(800, 500); 
   cartaVirada = true
   xb = 150; 
   yb1 = 200; 
@@ -324,6 +378,7 @@ function setup() {
   alturaB = 60; 
   suavizaB = 12; 
 
+  frameRate(30)
   console.log(matrizMatch)
 }
 function mouseClicked() {
@@ -337,23 +392,19 @@ function mouseClicked() {
       contClicks = contClicks + 1
       console.log("Cliques: " + contClicks)
       if( contClicks == 2) {
-        if(matrizCartasViradas[linCol[0]][linCol[1]] == matrizValores[linColAnterior[0]][linColAnterior[1]]){
+        if(matrizValores[linCol[0]][linCol[1]] == matrizValores[linColAnterior[0]][linColAnterior[1]]){
           matrizMatch[linCol[0]][linCol[1]] = true;
           matrizMatch[linColAnterior[0]][linColAnterior[1]] = true;
         }
       }
   
       if (contClicks > 2) {
-        // marca todas as cartas como desviradas
-        for(l = 0; l < matrizTamanho; l++) {
-          for(c = 0; c < matrizTamanho; c++) {
-          matrizCartasViradas[l][c] = false;
-        } 
-      }
+        desvirarCartas();
       matrizCartasViradas[linCol[0]][linCol[1]] = true;
       contClicks = 1
-     }
-     if (contClicks == 1) {
+     } 
+     
+      if (contClicks == 1) {
        linColAnterior = linCol;
      }
     }
@@ -368,6 +419,7 @@ function draw() {
   if ( tela == 1) {
     
     telaJogo()
+    
     cartaVirada = !cartaVirada
    
   }
